@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}SitemapWatch — Dashboard{% endblock %}
+
+{% block content %}
+<section class="track-form">
+    <h2>Track a Website</h2>
+    <form action="{{ url_for('track') }}" method="POST">
+        <div class="input-group">
+            <input
+                type="text"
+                name="url"
+                placeholder="Enter a website URL (e.g., competitor.com)"
+                required
+                autocomplete="off"
+                autofocus
+            >
+            <button type="submit">Track</button>
+        </div>
+    </form>
+</section>
+
+<section class="tracked-sites">
+    <h2>Tracked Sites</h2>
+
+    {% if sites %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Domain</th>
+                    <th>Pages</th>
+                    <th>Last Checked</th>
+                    <th>Changes</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for site in sites %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('site_detail', site_id=site.id) }}" class="domain-link">
+                            {{ site.domain }}
+                        </a>
+                    </td>
+                    <td>{{ site.page_count }}</td>
+                    <td>
+                        {% if site.last_checked %}
+                            <span class="timestamp">{{ site.last_checked[:16].replace('T', ' ') }} UTC</span>
+                        {% else %}
+                            <span class="timestamp muted">Never</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if site.total_changes > 0 %}
+                            <span class="badge">{{ site.total_changes }}</span>
+                        {% else %}
+                            <span class="muted">0</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status status-{{ site.status }}">{{ site.status }}</span>
+                        {% if site.error_message %}
+                            <span class="error-hint" title="{{ site.error_message }}">(?)</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions">
+                        <form action="{{ url_for('check_now', site_id=site.id) }}" method="POST" class="inline-form">
+                            <button type="submit" class="btn-small btn-check">Check Now</button>
+                        </form>
+                        <form action="{{ url_for('remove', site_id=site.id) }}" method="POST" class="inline-form"
+                              onsubmit="return confirm('Stop tracking {{ site.domain }}? This will delete all history.')">
+                            <button type="submit" class="btn-small btn-remove">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">
+            <p>No sites tracked yet. Enter a URL above to get started.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

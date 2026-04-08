@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ site.domain }} — SitemapWatch{% endblock %}
+
+{% block content %}
+<section class="site-header">
+    <div class="site-title-row">
+        <h2>{{ site.domain }}</h2>
+        <form action="{{ url_for('check_now', site_id=site.id) }}" method="POST" class="inline-form">
+            <button type="submit" class="btn-small btn-check">Check Now</button>
+        </form>
+    </div>
+
+    <div class="site-stats">
+        <div class="stat">
+            <span class="stat-value">{{ site.page_count }}</span>
+            <span class="stat-label">Pages Tracked</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">{{ changes|length }}</span>
+            <span class="stat-label">Changes Detected</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">{{ site.created_at[:10] }}</span>
+            <span class="stat-label">Tracking Since</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">
+                {% if site.last_checked %}
+                    {{ site.last_checked[:16].replace('T', ' ') }}
+                {% else %}
+                    Never
+                {% endif %}
+            </span>
+            <span class="stat-label">Last Checked (UTC)</span>
+        </div>
+    </div>
+</section>
+
+<section class="change-history">
+    <h3>Change History</h3>
+
+    {% if changes %}
+        {% for change in changes %}
+        <div class="change-card">
+            <div class="change-header">
+                <span class="change-date">{{ change.detected_at[:16].replace('T', ' ') }} UTC</span>
+                <span class="change-summary">
+                    {% if change.added_count > 0 %}
+                        <span class="added-badge">+{{ change.added_count }} added</span>
+                    {% endif %}
+                    {% if change.removed_count > 0 %}
+                        <span class="removed-badge">-{{ change.removed_count }} removed</span>
+                    {% endif %}
+                </span>
+            </div>
+
+            {% if change.added_urls %}
+            <div class="url-list url-list-added">
+                <h4>New Pages</h4>
+                <ul>
+                    {% for url in change.added_urls %}
+                    <li><a href="{{ url }}" target="_blank" rel="noopener">{{ url }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if change.removed_urls %}
+            <div class="url-list url-list-removed">
+                <h4>Removed Pages</h4>
+                <ul>
+                    {% for url in change.removed_urls %}
+                    <li><span class="removed-url">{{ url }}</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <p>No changes detected yet. Changes will appear here after the next check finds new or removed pages.</p>
+        </div>
+    {% endif %}
+</section>
+
+<div class="back-link">
+    <a href="{{ url_for('dashboard') }}">&larr; Back to Dashboard</a>
+</div>
+{% endblock %}
